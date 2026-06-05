@@ -198,8 +198,8 @@ with st.sidebar:
         placeholder="Semua"
     )
     tujuan_sel = st.multiselect(
-        "Tujuan Kunjungan",
-        options=sorted(df_raw["tujuan_kunjungan"].dropna().unique().tolist()),
+        "Tujuan Menginap",
+        options=sorted(df_raw["tujuan_menginap"].dropna().unique().tolist()),
         default=[],
         placeholder="Semua"
     )
@@ -254,7 +254,7 @@ df = df_raw.copy()
 if nama_sel:  df = df[df["nama"].isin(nama_sel)]
 if jk_sel:    df = df[df["jenis_kelamin"].isin(jk_sel)]
 if kota_sel:  df = df[df["kota_asal"].isin(kota_sel)]
-if tujuan_sel: df = df[df["tujuan_kunjungan"].isin(tujuan_sel)]
+if tujuan_sel: df = df[df["tujuan_menginap"].isin(tujuan_sel)]
 if tipe_sel:  df = df[df["tipe_kunjungan"].isin(tipe_sel)]
 if si_sel:    df = df[df["sumber_informasi"].isin(si_sel)]
 
