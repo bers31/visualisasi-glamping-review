@@ -93,17 +93,19 @@ def load_data():
 # ── Warna Konsisten ───────────────────────────────────────────────────────────
 PALETTE     = ["#5a7a5a", "#c9a96e", "#8b6f5a", "#7a9c7a", "#c4b8a8", "#3d5c3a", "#e8f0e8"]
 RATING_COLS = [
-    "rating_fasilitas", "rating_kebersihan", "rating_pelayanan", "rating_staff",
-    "rating_harga", "rating_makanan", "rating_aktivitas_wahana", "rating_lokasi"
+    "rating_fasilitas", "rating_kebersihan",
+    "rating_kualitas_layanan", "rating_keramahan_staff",
+    "rating_harga", "rating_makanan",
+    "rating_aktivitas", "rating_lokasi"
 ]
 RATING_LABELS = {
     "rating_fasilitas":         "Fasilitas",
     "rating_kebersihan":        "Kebersihan",
-    "rating_pelayanan":         "Pelayanan",
-    "rating_staff":             "Staff",
+    "rating_kualitas_layanan":  "Kualitas Layanan",
+    "rating_keramahan_staff":   "Keramahan Staff",
     "rating_harga":             "Harga & Value",
     "rating_makanan":           "Makanan & Minuman",
-    "rating_aktivitas_wahana":  "Aktivitas & Wahana",
+    "rating_aktivitas":         "Aktivitas",
     "rating_lokasi":            "Lokasi & Akses",
 }
 
