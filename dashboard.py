@@ -232,19 +232,25 @@ with st.sidebar:
 
     # Rentang Tanggal
     st.markdown("**Rentang Tanggal**")
-    min_date = df_raw["submitted_at"].dt.date.min()
-    max_date = df_raw["submitted_at"].dt.date.max()
 
-    if min_date == max_date:
-        st.caption(f"Tanggal: {min_date} (data belum bervariasi)")
-        tanggal_range = (min_date, max_date)
+    submitted_clean = df_raw["submitted_at"].dropna()
+
+    if len(submitted_clean) > 0:
+        min_date = pd.Timestamp(submitted_clean.min()).date()
+        max_date = pd.Timestamp(submitted_clean.max()).date()
+
+        if min_date == max_date:
+            st.caption(f"Tanggal: {min_date} (data belum bervariasi)")
+            tanggal_range = (min_date, max_date)
+        else:
+            tanggal_range = st.date_input(
+                "Pilih Rentang Tanggal",
+                value=(min_date, max_date),
+                min_value=min_date,
+                max_value=max_date,
+            )
     else:
-        tanggal_range = st.date_input(
-            "Pilih Rentang Tanggal",
-            value=(min_date, max_date),
-            min_value=min_date,
-            max_value=max_date,
-        )
+        tanggal_range = None
 
     # Rating per aspek
     st.markdown("**Rating per Aspek**")
@@ -285,7 +291,7 @@ if kp_sel:
     df        = df[df["kunjungan_pertama"].isin(kp_values)]
 
 # Filter rentang tanggal
-if isinstance(tanggal_range, tuple) and len(tanggal_range) == 2:
+if tanggal_range and isinstance(tanggal_range, tuple) and len(tanggal_range) == 2:
     df = df[
         (df["submitted_at"].dt.date >= tanggal_range[0]) &
         (df["submitted_at"].dt.date <= tanggal_range[1])
