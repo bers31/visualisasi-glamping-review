@@ -11,7 +11,7 @@ load_dotenv()
 
 # ── Konfigurasi Halaman ───────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Dashboard Review — Maribaya Resort",
+    page_title="Dashboard Review — Maribaya Glamping Tent",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -309,7 +309,7 @@ elif ulasan_sel == "Kosong (null)":
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="dashboard-header">
-    <h1>🌿 Dashboard Review Maribaya Resort</h1>
+    <h1>🌿 Dashboard Review Maribaya Glamping Tent</h1>
     <p>Analisis ulasan pengunjung untuk mendukung keputusan bisnis berbasis data</p>
 </div>
 """, unsafe_allow_html=True)
