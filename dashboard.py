@@ -94,15 +94,15 @@ def load_data():
 PALETTE     = ["#5a7a5a", "#c9a96e", "#8b6f5a", "#7a9c7a", "#c4b8a8", "#3d5c3a", "#e8f0e8"]
 RATING_COLS = [
     "rating_fasilitas", "rating_kebersihan",
-    "rating_kualitas_layanan", "rating_keramahan_staff",
+    "rating_pelayanan_staff", "rating_skor_keseluruhan",
     "rating_harga", "rating_makanan",
     "rating_aktivitas", "rating_lokasi"
 ]
 RATING_LABELS = {
     "rating_fasilitas":         "Fasilitas",
     "rating_kebersihan":        "Kebersihan",
-    "rating_kualitas_layanan":  "Kualitas Layanan",
-    "rating_keramahan_staff":   "Keramahan Staff",
+    "rating_pelayanan_staff":   "Pelayanan & Staff",
+    "rating_skor_keseluruhan":  "Skor Keseluruhan",
     "rating_harga":             "Harga & Value",
     "rating_makanan":           "Makanan & Minuman",
     "rating_aktivitas":         "Aktivitas",
