@@ -272,6 +272,12 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("*Data diperbarui setiap 5 menit*")
 
+    # Anomaly
+    anomaly_sel = st.selectbox(
+        "Status Anomali",
+        options=["Semua", "Normal (False)", "Anomali (True)", "Belum Dicek (Null)"]
+    )
+
 # ── Terapkan Filter ───────────────────────────────────────────────────────────
 df = df_raw.copy()
 
@@ -290,7 +296,6 @@ if kp_sel:
     kp_values = [kp_map[k] for k in kp_sel]
     df        = df[df["kunjungan_pertama"].isin(kp_values)]
 
-# Filter rentang tanggal
 if tanggal_range and isinstance(tanggal_range, tuple) and len(tanggal_range) == 2:
     df = df[
         (df["submitted_at"].dt.date >= tanggal_range[0]) &
@@ -305,6 +310,13 @@ if ulasan_sel == "Ada isi":
     df = df[df["ulasan_teks"].notna() & (df["ulasan_teks"].str.strip() != "")]
 elif ulasan_sel == "Kosong (null)":
     df = df[df["ulasan_teks"].isna() | (df["ulasan_teks"].str.strip() == "")]
+
+if anomaly_sel == "Normal (False)":
+    df = df[df["is_anomaly"] == False]
+elif anomaly_sel == "Anomali (True)":
+    df = df[df["is_anomaly"] == True]
+elif anomaly_sel == "Belum Dicek (Null)":
+    df = df[df["is_anomaly"].isna()]
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
