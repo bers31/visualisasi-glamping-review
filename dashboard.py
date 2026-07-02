@@ -269,14 +269,14 @@ with st.sidebar:
         options=["Semua", "Ada isi", "Kosong (null)"]
     )
 
-    st.markdown("---")
-    st.markdown("*Data diperbarui setiap 5 menit*")
-
     # Anomaly
     anomaly_sel = st.selectbox(
         "Status Anomali",
         options=["Semua", "Normal (False)", "Anomali (True)", "Belum Dicek (Null)"]
     )
+
+    st.markdown("---")
+    st.markdown("*Data diperbarui setiap 5 menit*")
 
 # ── Terapkan Filter ───────────────────────────────────────────────────────────
 df = df_raw.copy()
@@ -561,7 +561,7 @@ st.plotly_chart(fig_tren, use_container_width=True)
 st.markdown('<div class="section-title">📋 Data Lengkap</div>', unsafe_allow_html=True)
 
 ROWS_PER_PAGE = 1000
-df_tabel      = df.drop(columns=["is_anomaly", "anomaly_reason"], errors="ignore")
+df_tabel      = df.drop(columns=["anomaly_reason"], errors="ignore")
 total_rows    = len(df_tabel)
 total_pages   = max(1, (total_rows + ROWS_PER_PAGE - 1) // ROWS_PER_PAGE)
 
