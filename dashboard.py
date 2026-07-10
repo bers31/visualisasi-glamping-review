@@ -679,7 +679,7 @@ st.dataframe(
 st.download_button(
     label=f"⬇️ Download Seluruh Data ({total_rows:,} baris) sebagai CSV",
     data=df_tabel.to_csv(index=False, encoding="utf-8-sig"),
-    file_name="maribaya_reviews_filtered.csv",
+    file_name="glamping_reviews_filtered.csv",
     mime="text/csv",
     use_container_width=True,
 )
