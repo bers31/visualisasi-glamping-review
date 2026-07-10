@@ -507,46 +507,23 @@ st.plotly_chart(fig_dist, use_container_width=True)
 
 # ── Seksi 4: Ulasan Teks ─────────────────────────────────────────────────────
 st.markdown('<div class="section-title">✍️ Ulasan Teks</div>', unsafe_allow_html=True)
-
-col1, col2 = st.columns([1, 2])
-
-with col1:
-    ada    = df["ulasan_teks"].notna().sum()
-    kosong = df["ulasan_teks"].isna().sum()
-    fig_ul = px.pie(
-        values=[ada, kosong],
-        names=["Ada Ulasan", "Tidak Ada Ulasan"],
-        color_discrete_sequence=[PALETTE[0], PALETTE[4]],
-        hole=0.4,
-        title="Proporsi Ulasan Teks",
-    )
-    fig_ul.update_traces(textposition="outside", textinfo="percent+label")
-    fig_ul.update_layout(
-        paper_bgcolor="white",
-        font=dict(family="DM Sans"),
-        showlegend=False,
-        margin=dict(t=48, b=48),
-    )
-    st.plotly_chart(fig_ul, use_container_width=True)
-
-with col2:
-    df_ulasan = df[df["ulasan_teks"].notna() & (df["ulasan_teks"].str.strip() != "")]
-    if not df_ulasan.empty:
-        st.markdown("**Ulasan Teks Tersedia**")
-        st.dataframe(
-            df_ulasan[["nama", "kota_asal", "tipe_kunjungan", "submitted_at", "ulasan_teks"]]
-            .rename(columns={
-                "nama": "Nama",
-                "kota_asal": "Kota",
-                "tipe_kunjungan": "Tipe",
-                "submitted_at": "Waktu",
-                "ulasan_teks": "Ulasan"
-            }),
-            use_container_width=True,
-            height=280,
-        )
-    else:
-        st.info("Tidak ada ulasan teks pada data yang difilter.")
+ada    = df["ulasan_teks"].notna().sum()
+kosong = df["ulasan_teks"].isna().sum()
+fig_ul = px.pie(
+    values=[ada, kosong],
+    names=["Ada Ulasan", "Tidak Ada Ulasan"],
+    color_discrete_sequence=[PALETTE[0], PALETTE[4]],
+    hole=0.4,
+    title="Proporsi Ulasan Teks",
+)
+fig_ul.update_traces(textposition="outside", textinfo="percent+label")
+fig_ul.update_layout(
+    paper_bgcolor="white",
+    font=dict(family="DM Sans"),
+    showlegend=False,
+    margin=dict(t=48, b=48),
+)
+st.plotly_chart(fig_ul, use_container_width=True)
 
 # ── Seksi 5: Tren Submission ──────────────────────────────────────────────────
 st.markdown('<div class="section-title">📈 Tren Submission</div>', unsafe_allow_html=True)
