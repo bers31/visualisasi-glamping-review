@@ -88,6 +88,17 @@ def load_data():
     df = pd.read_sql("SELECT * FROM reviews", engine)
     df["submitted_at"] = pd.to_datetime(df["submitted_at"])
     df["submitted_date"] = df["submitted_at"].dt.date
+    df["tahun"] = df["submitted_at"].dt.year
+    df["bulan"] = df["submitted_at"].dt.month
+    df["nama_bulan"] = pd.Categorical(
+        df["submitted_at"].dt.strftime("%B"),
+        categories=[
+            "January", "February", "March", "April",
+            "May", "June", "July", "August",
+            "September", "October", "November", "December"
+        ],
+        ordered=True
+    )
     return df
 
 # ── Warna Konsisten ───────────────────────────────────────────────────────────
@@ -556,6 +567,73 @@ fig_tren.update_layout(
     margin=dict(t=48, b=24),
 )
 st.plotly_chart(fig_tren, use_container_width=True)
+
+st.markdown(
+    '<div class="section-title">📅 Tren Pengunjung per Bulan</div>',
+    unsafe_allow_html=True
+)
+
+col1, col2 = st.columns([6,1])
+
+with col1:
+    st.markdown("##### Trend Pengunjung Bulanan")
+
+with col2:
+    tahun_trend = st.selectbox(
+        "Tahun",
+        options=sorted(df["tahun"].unique()),
+        key="trend_tahun"
+    )
+
+bulan_map = {
+    1:"Januari",
+    2:"Februari",
+    3:"Maret",
+    4:"April",
+    5:"Mei",
+    6:"Juni",
+    7:"Juli",
+    8:"Agustus",
+    9:"September",
+    10:"Oktober",
+    11:"November",
+    12:"Desember"
+}
+
+trend_bulanan = (
+    df[df["tahun"] == tahun_trend]
+    .groupby("bulan")
+    .size()
+    .reindex(range(1,13), fill_value=0)
+    .reset_index(name="Jumlah")
+)
+
+trend_bulanan["Bulan"] = trend_bulanan["bulan"].map(bulan_map)
+
+fig_bulanan = px.line(
+    trend_bulanan,
+    x="Bulan",
+    y="Jumlah",
+    markers=True,
+    title=f"Trend Pengunjung Tahun {tahun_trend}",
+    color_discrete_sequence=[PALETTE[0]]
+)
+
+fig_bulanan.update_traces(
+    line=dict(width=3),
+    marker=dict(size=8)
+)
+
+fig_bulanan.update_layout(
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    font=dict(family="DM Sans"),
+    yaxis=dict(gridcolor="#f0ece5"),
+    xaxis=dict(gridcolor="#f0ece5"),
+    margin=dict(t=48,b=24)
+)
+
+st.plotly_chart(fig_bulanan, use_container_width=True)
 
 # ── Seksi 6: Tabel Data & Download ───────────────────────────────────────────
 st.markdown('<div class="section-title">📋 Data Lengkap</div>', unsafe_allow_html=True)
