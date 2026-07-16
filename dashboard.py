@@ -117,16 +117,17 @@ def load_data():
 
 # ── Warna Konsisten ───────────────────────────────────────────────────────────
 PALETTE     = ["#5a7a5a", "#c9a96e", "#8b6f5a", "#7a9c7a", "#c4b8a8", "#3d5c3a", "#e8f0e8"]
-RATING_COLS = [
-    "rating_skor_keseluruhan",
+OVERALL_COL = "rating_skor_keseluruhan"
+ASPEK_COLS = [
     "rating_fasilitas",
     "rating_kebersihan",
     "rating_pelayanan_staff",
     "rating_harga",
     "rating_makanan",
     "rating_lokasi",
-    "rating_aktivitas"
+    "rating_aktivitas",
 ]
+RATING_COLS = [OVERALL_COL] + ASPEK_COLS
 RATING_LABELS = {
     "rating_fasilitas":         "Fasilitas",
     "rating_kebersihan":        "Kebersihan",
@@ -356,19 +357,41 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Metric Summary ────────────────────────────────────────────────────────────
-c1, c2, c3, c4, c5 = st.columns(5)
-
 total                   = len(df)
-avg_rating_overall      = df[RATING_COLS].stack().mean()
+avg_rating_aspek        = df[ASPEK_COLS].mean().mean()
+avg_rating_overall      = df[OVERALL_COL].mean()
 pct_pertama             = (df["kunjungan_pertama"] == True).sum() / total * 100 if total > 0 else 0
 ada_ulasan              = df["ulasan_teks"].notna().sum()
 kota_terbanyak          = df["kota_asal"].mode()[0] if df["kota_asal"].notna().any() else "-"
 
-c1.metric("Total Review",       f"{total:,}")
-c2.metric("Rata-rata Rating",   f"{avg_rating_overall:.2f} ⭐" if total > 0 else "-")
-c3.metric("Kunjungan Pertama",  f"{pct_pertama:.0f}%" if total > 0 else "-")
-c4.metric("Ada Ulasan Teks",    f"{ada_ulasan:,}")
-c5.metric("Kota Terbanyak",     kota_terbanyak)
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+
+c1.metric("Total Review", f"{total:,}")
+
+c2.metric(
+    "Avg Rating Overall",
+    f"{avg_rating_overall:.2f} ⭐"
+)
+
+c3.metric(
+    "Avg Rating Aspek",
+    f"{avg_rating_aspek:.2f} ⭐"
+)
+
+c4.metric(
+    "Kunjungan Pertama",
+    f"{pct_pertama:.0f}%"
+)
+
+c5.metric(
+    "Ada Ulasan Teks",
+    f"{ada_ulasan:,}"
+)
+
+c6.metric(
+    "Kota Terbanyak",
+    kota_terbanyak
+)
 
 if total == 0:
     st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
@@ -521,19 +544,9 @@ fig_heat.update_layout(
 )
 st.plotly_chart(fig_heat, use_container_width=True)
 
-ASPEK_RATING = [
-    "rating_fasilitas",
-    "rating_kebersihan",
-    "rating_pelayanan_staff",
-    "rating_harga",
-    "rating_makanan",
-    "rating_lokasi",
-    "rating_aktivitas",
-]
-
 avg_rating_df = pd.DataFrame({
-    "Aspek": [RATING_LABELS[c] for c in ASPEK_RATING],
-    "Rating": [df[c].mean() for c in ASPEK_RATING]
+    "Aspek": [RATING_LABELS[c] for c in ASPEK_COLS],
+    "Rating": [df[c].mean() for c in ASPEK_COLS]
 })
 
 terbaik = avg_rating_df.loc[avg_rating_df["Rating"].idxmax()]
