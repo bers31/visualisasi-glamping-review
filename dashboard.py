@@ -421,7 +421,7 @@ if df["usia"].notna().any():
 # ── Seksi 2: Sumber Informasi & Kota Asal ────────────────────────────────────
 st.markdown('<div class="section-title">📍 Informasi, Asal, dan Tujuan Pengunjung</div>', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.plotly_chart(
@@ -449,6 +449,22 @@ with col3:
             df.dropna(subset=["tujuan_menginap"]),
             "tujuan_menginap",
             "Tujuan Menginap"
+        ),
+        use_container_width=True
+    )
+with col4:
+    df_ulasan = df.copy()
+    df_ulasan["status_ulasan"] = df_ulasan["ulasan_teks"].apply(
+        lambda x: "Ada Ulasan"
+        if pd.notna(x) and str(x).strip() != ""
+        else "Tidak Ada Ulasan"
+    )
+
+    st.plotly_chart(
+        make_pie(
+            df_ulasan,
+            "status_ulasan",
+            "Ketersediaan Ulasan"
         ),
         use_container_width=True
     )
@@ -505,9 +521,19 @@ fig_heat.update_layout(
 )
 st.plotly_chart(fig_heat, use_container_width=True)
 
+ASPEK_RATING = [
+    "rating_fasilitas",
+    "rating_kebersihan",
+    "rating_pelayanan_staff",
+    "rating_harga",
+    "rating_makanan",
+    "rating_lokasi",
+    "rating_aktivitas",
+]
+
 avg_rating_df = pd.DataFrame({
-    "Aspek":[RATING_LABELS[c] for c in RATING_COLS],
-    "Rating":[df[c].mean() for c in RATING_COLS]
+    "Aspek": [RATING_LABELS[c] for c in ASPEK_RATING],
+    "Rating": [df[c].mean() for c in ASPEK_RATING]
 })
 
 terbaik = avg_rating_df.loc[avg_rating_df["Rating"].idxmax()]
