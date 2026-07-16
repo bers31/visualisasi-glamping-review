@@ -361,7 +361,7 @@ total                   = len(df)
 avg_rating_aspek        = df[ASPEK_COLS].mean().mean()
 avg_rating_overall      = df[OVERALL_COL].mean()
 pct_pertama             = (df["kunjungan_pertama"] == True).sum() / total * 100 if total > 0 else 0
-ada_ulasan              = df["ulasan_teks"].notna().sum()
+ada_ulasan              = df["ulasan_teks"].fillna("").str.strip().ne("").sum()
 kota_terbanyak          = df["kota_asal"].mode()[0] if df["kota_asal"].notna().any() else "-"
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
