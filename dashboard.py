@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+import calendar
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
-from io import BytesIO
 
 load_dotenv()
 
@@ -85,29 +84,48 @@ def get_engine():
 @st.cache_data(ttl=300)
 def load_data():
     engine = get_engine()
-    df = pd.read_sql("SELECT * FROM reviews", engine)
+    query = """
+    SELECT
+        submitted_at,
+        nama,
+        usia,
+        jenis_kelamin,
+        kota_asal,
+        tujuan_menginap,
+        kunjungan_pertama,
+        tipe_kunjungan,
+        sumber_informasi,
+        rating_fasilitas,
+        rating_kebersihan,
+        rating_pelayanan_staff,
+        rating_harga,
+        rating_makanan,
+        rating_lokasi,
+        rating_aktivitas,
+        rating_skor_keseluruhan,
+        ulasan_teks,
+        is_anomaly,
+        anomaly_reason
+    FROM reviews
+    """
+
+    df = pd.read_sql(query, engine)
     df["submitted_at"] = pd.to_datetime(df["submitted_at"])
-    df["submitted_date"] = df["submitted_at"].dt.date
     df["tahun"] = df["submitted_at"].dt.year
     df["bulan"] = df["submitted_at"].dt.month
-    df["nama_bulan"] = pd.Categorical(
-        df["submitted_at"].dt.strftime("%B"),
-        categories=[
-            "January", "February", "March", "April",
-            "May", "June", "July", "August",
-            "September", "October", "November", "December"
-        ],
-        ordered=True
-    )
     return df
 
 # ── Warna Konsisten ───────────────────────────────────────────────────────────
 PALETTE     = ["#5a7a5a", "#c9a96e", "#8b6f5a", "#7a9c7a", "#c4b8a8", "#3d5c3a", "#e8f0e8"]
 RATING_COLS = [
-    "rating_fasilitas", "rating_kebersihan",
-    "rating_pelayanan_staff", "rating_skor_keseluruhan",
-    "rating_harga", "rating_makanan",
-    "rating_aktivitas", "rating_lokasi"
+    "rating_skor_keseluruhan",
+    "rating_fasilitas",
+    "rating_kebersihan",
+    "rating_pelayanan_staff",
+    "rating_harga",
+    "rating_makanan",
+    "rating_lokasi",
+    "rating_aktivitas"
 ]
 RATING_LABELS = {
     "rating_fasilitas":         "Fasilitas",
@@ -340,14 +358,14 @@ st.markdown("""
 # ── Metric Summary ────────────────────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
 
-total           = len(df)
-avg_rating      = df[RATING_COLS].mean().mean()
-pct_pertama     = (df["kunjungan_pertama"] == True).sum() / total * 100 if total > 0 else 0
-ada_ulasan      = df["ulasan_teks"].notna().sum()
-kota_terbanyak  = df["kota_asal"].mode()[0] if df["kota_asal"].notna().any() else "-"
+total                   = len(df)
+avg_rating_overall      = df[RATING_COLS].stack().mean()
+pct_pertama             = (df["kunjungan_pertama"] == True).sum() / total * 100 if total > 0 else 0
+ada_ulasan              = df["ulasan_teks"].notna().sum()
+kota_terbanyak          = df["kota_asal"].mode()[0] if df["kota_asal"].notna().any() else "-"
 
 c1.metric("Total Review",       f"{total:,}")
-c2.metric("Rata-rata Rating",   f"{avg_rating:.2f} ⭐" if total > 0 else "-")
+c2.metric("Rata-rata Rating",   f"{avg_rating_overall:.2f} ⭐" if total > 0 else "-")
 c3.metric("Kunjungan Pertama",  f"{pct_pertama:.0f}%" if total > 0 else "-")
 c4.metric("Ada Ulasan Teks",    f"{ada_ulasan:,}")
 c5.metric("Kota Terbanyak",     kota_terbanyak)
@@ -401,9 +419,9 @@ if df["usia"].notna().any():
     st.plotly_chart(fig_usia, use_container_width=True)
 
 # ── Seksi 2: Sumber Informasi & Kota Asal ────────────────────────────────────
-st.markdown('<div class="section-title">📍 Sumber Informasi & Asal Pengunjung</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">📍 Informasi, Asal, dan Tujuan Pengunjung</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.plotly_chart(
@@ -425,15 +443,24 @@ with col2:
         ),
         use_container_width=True
     )
+with col3:
+    st.plotly_chart(
+        make_bar_h(
+            df.dropna(subset=["tujuan_menginap"]),
+            "tujuan_menginap",
+            "Tujuan Menginap"
+        ),
+        use_container_width=True
+    )
 
 # ── Seksi 3: Rating ───────────────────────────────────────────────────────────
 st.markdown('<div class="section-title">⭐ Analisis Rating</div>', unsafe_allow_html=True)
 
 # Rata-rata rating per aspek
 avg_data = pd.DataFrame({
-    "Aspek":  [RATING_LABELS[c] for c in RATING_COLS],
-    "Rata-rata": [df[c].mean() for c in RATING_COLS]
-}).sort_values("Rata-rata")
+    "Aspek":[RATING_LABELS[c] for c in RATING_COLS],
+    "Rata-rata":[df[c].mean() for c in RATING_COLS]
+})
 
 fig_avg = px.bar(
     avg_data, x="Rata-rata", y="Aspek", orientation="h",
@@ -478,73 +505,45 @@ fig_heat.update_layout(
 )
 st.plotly_chart(fig_heat, use_container_width=True)
 
-# Distribusi per aspek (grouped bar)
-dist_long = []
-for col in RATING_COLS:
-    for star in range(1, 6):
-        dist_long.append({
-            "Aspek":   RATING_LABELS[col],
-            "Bintang": f"⭐ {star}",
-            "Jumlah":  int((df[col] == star).sum())
-        })
+avg_rating_df = pd.DataFrame({
+    "Aspek":[RATING_LABELS[c] for c in RATING_COLS],
+    "Rating":[df[c].mean() for c in RATING_COLS]
+})
 
-dist_long_df = pd.DataFrame(dist_long)
-fig_dist = px.bar(
-    dist_long_df, x="Aspek", y="Jumlah", color="Bintang",
-    barmode="group",
-    color_discrete_sequence=["#c0392b", "#e67e22", "#f1c40f", "#7a9c7a", "#2d4a2d"],
-    title="Distribusi Rating per Aspek (Grouped Bar)",
-)
-fig_dist.update_layout(
-    paper_bgcolor="white", plot_bgcolor="white",
-    font=dict(family="DM Sans"),
-    yaxis=dict(gridcolor="#f0ece5"),
-    xaxis=dict(tickangle=-20),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02),
-    margin=dict(t=64, b=48),
-)
-st.plotly_chart(fig_dist, use_container_width=True)
+terbaik = avg_rating_df.loc[avg_rating_df["Rating"].idxmax()]
+terburuk = avg_rating_df.loc[avg_rating_df["Rating"].idxmin()]
 
-# ── Seksi 4: Ulasan Teks ─────────────────────────────────────────────────────
-st.markdown('<div class="section-title">✍️ Ulasan Teks</div>', unsafe_allow_html=True)
-ada    = df["ulasan_teks"].notna().sum()
-kosong = df["ulasan_teks"].isna().sum()
-fig_ul = px.pie(
-    values=[ada, kosong],
-    names=["Ada Ulasan", "Tidak Ada Ulasan"],
-    color_discrete_sequence=[PALETTE[0], PALETTE[4]],
-    hole=0.4,
-    title="Proporsi Ulasan Teks",
-)
-fig_ul.update_traces(textposition="outside", textinfo="percent+label")
-fig_ul.update_layout(
-    paper_bgcolor="white",
-    font=dict(family="DM Sans"),
-    showlegend=False,
-    margin=dict(t=48, b=48),
-)
-st.plotly_chart(fig_ul, use_container_width=True)
+col1,col2=st.columns(2)
 
-# ── Seksi 5: Tren Submission ──────────────────────────────────────────────────
-st.markdown('<div class="section-title">📈 Tren Submission</div>', unsafe_allow_html=True)
-
-tren = df.groupby("submitted_date").size().reset_index(name="Jumlah")
-fig_tren = px.line(
-    tren, x="submitted_date", y="Jumlah",
-    markers=True,
-    color_discrete_sequence=[PALETTE[0]],
-    title="Jumlah Review per Hari",
-    labels={"submitted_date": "Tanggal", "Jumlah": "Jumlah Review"},
+col1.success(
+    f"🏆 Aspek Terbaik\n\n"
+    f"**{terbaik['Aspek']}**\n\n"
+    f"⭐ {terbaik['Rating']:.2f}"
 )
-fig_tren.update_layout(
-    paper_bgcolor="white", plot_bgcolor="white",
-    font=dict(family="DM Sans"),
-    yaxis=dict(gridcolor="#f0ece5"),
-    xaxis=dict(gridcolor="#f0ece5"),
-    margin=dict(t=48, b=24),
-)
-st.plotly_chart(fig_tren, use_container_width=True)
 
+col2.error(
+    f"⚠ Aspek Terendah\n\n"
+    f"**{terburuk['Aspek']}**\n\n"
+    f"⭐ {terburuk['Rating']:.2f}"
+)
+st.markdown(
+    '<div class="section-title">💬 Review Terbaru</div>',
+    unsafe_allow_html=True
+)
+
+review = (
+    df.sort_values("submitted_at", ascending=False)
+    [["submitted_at","nama","rating_skor_keseluruhan","ulasan_teks"]]
+    .head(10)
+)
+
+st.dataframe(
+    review,
+    hide_index=True,
+    use_container_width=True
+)
+
+# ── Seksi 4: Tren Submission ──────────────────────────────────────────────────
 st.markdown(
     '<div class="section-title">📅 Tren Pengunjung per Bulan</div>',
     unsafe_allow_html=True
@@ -563,18 +562,8 @@ with col2:
     )
 
 bulan_map = {
-    1:"Januari",
-    2:"Februari",
-    3:"Maret",
-    4:"April",
-    5:"Mei",
-    6:"Juni",
-    7:"Juli",
-    8:"Agustus",
-    9:"September",
-    10:"Oktober",
-    11:"November",
-    12:"Desember"
+    i: calendar.month_name[i]
+    for i in range(1,13)
 }
 
 trend_bulanan = (
@@ -616,7 +605,19 @@ st.plotly_chart(fig_bulanan, use_container_width=True)
 st.markdown('<div class="section-title">📋 Data Lengkap</div>', unsafe_allow_html=True)
 
 ROWS_PER_PAGE = 1000
-df_tabel      = df.drop(columns=["anomaly_reason"], errors="ignore")
+df_tabel = df[
+    [
+        "submitted_at",
+        "nama",
+        "usia",
+        "jenis_kelamin",
+        "kota_asal",
+        "tujuan_menginap",
+        "rating_skor_keseluruhan",
+        "is_anomaly",
+        "anomaly_reason",
+    ]
+]
 total_rows    = len(df_tabel)
 total_pages   = max(1, (total_rows + ROWS_PER_PAGE - 1) // ROWS_PER_PAGE)
 
@@ -676,9 +677,13 @@ st.dataframe(
 )
 
 # Download seluruh data terfilter (tidak terbatas halaman)
+csv = df_tabel.to_csv(
+    index=False
+).encode("utf-8-sig")
+
 st.download_button(
     label=f"⬇️ Download Seluruh Data ({total_rows:,} baris) sebagai CSV",
-    data=df_tabel.to_csv(index=False, encoding="utf-8-sig"),
+    data=csv,
     file_name="glamping_reviews_filtered.csv",
     mime="text/csv",
     use_container_width=True,
