@@ -100,7 +100,7 @@ def load_data():
         rating_pelayanan_staff,
         rating_harga,
         rating_makanan,
-        rating_lokasi,
+        rating_lokasi_tempat,
         rating_aktivitas,
         rating_skor_keseluruhan,
         ulasan_teks,
@@ -124,7 +124,7 @@ ASPEK_COLS = [
     "rating_pelayanan_staff",
     "rating_harga",
     "rating_makanan",
-    "rating_lokasi",
+    "rating_lokasi_tempat",
     "rating_aktivitas",
 ]
 RATING_COLS = [OVERALL_COL] + ASPEK_COLS
@@ -136,7 +136,7 @@ RATING_LABELS = {
     "rating_harga":             "Harga & Value",
     "rating_makanan":           "Makanan & Minuman",
     "rating_aktivitas":         "Aktivitas",
-    "rating_lokasi":            "Lokasi & Akses",
+    "rating_lokasi_tempat":     "Lokasi & Tempat",
 }
 
 def make_pie(df, col, title):
