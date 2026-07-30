@@ -112,6 +112,8 @@ def load_data():
 
     df = pd.read_sql(query, engine)
     df["submitted_at"] = pd.to_datetime(df["submitted_at"])
+    df["submitted_at"] = df["submitted_at"] + pd.Timedelta(hours=7)
+    df["submitted_date"] = df["submitted_at"].dt.date
     df["tahun"] = df["submitted_at"].dt.year
     df["bulan"] = df["submitted_at"].dt.month
     return df
