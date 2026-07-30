@@ -105,6 +105,7 @@ def load_data():
         rating_skor_keseluruhan,
         ulasan_teks,
         is_anomaly,
+        anomaly_category,
         anomaly_reason
     FROM reviews
     """
@@ -305,6 +306,19 @@ with st.sidebar:
         options=["Semua", "Normal (False)", "Anomali (True)", "Belum Dicek (Null)"]
     )
 
+    # Kategori Anomali
+    anomaly_category_sel = st.multiselect(
+        "Kategori Anomali",
+        options=sorted(
+            df_raw["anomaly_category"]
+            .dropna()
+            .unique()
+            .tolist()
+        ),
+        default=[],
+        placeholder="Semua"
+    )
+
     st.markdown("---")
     st.markdown("*Data diperbarui setiap 5 menit*")
 
@@ -347,6 +361,9 @@ elif anomaly_sel == "Anomali (True)":
     df = df[df["is_anomaly"] == True]
 elif anomaly_sel == "Belum Dicek (Null)":
     df = df[df["is_anomaly"].isna()]
+
+if anomaly_category_sel:
+    df = df[df["anomaly_category"].isin(anomaly_category_sel)]
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -565,22 +582,6 @@ col2.error(
     f"**{terburuk['Aspek']}**\n\n"
     f"⭐ {terburuk['Rating']:.2f}"
 )
-st.markdown(
-    '<div class="section-title">💬 Review Terbaru</div>',
-    unsafe_allow_html=True
-)
-
-review = (
-    df.sort_values("submitted_at", ascending=False)
-    [["submitted_at","nama","rating_skor_keseluruhan","ulasan_teks"]]
-    .head(10)
-)
-
-st.dataframe(
-    review,
-    hide_index=True,
-    use_container_width=True
-)
 
 # ── Seksi 4: Tren Submission ──────────────────────────────────────────────────
 st.markdown(
@@ -654,6 +655,7 @@ df_tabel = df[
         "tujuan_menginap",
         "rating_skor_keseluruhan",
         "is_anomaly",
+        "anomaly_category",
         "anomaly_reason",
     ]
 ]
